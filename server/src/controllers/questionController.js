@@ -152,11 +152,11 @@ export const generateQuestionsStreaming = async (req, res, next) => {
   try {
     const { assessmentId, prompt } = req.body;
     const apiKey = req.headers['x-openai-api-key'];
-    
+
     if (!apiKey) {
       return res.status(400).json({ success: false, error: 'OpenAI API key is required. Please add your API key in Settings.' });
     }
-    
+
     const assessment = await getAssessmentWithRef(assessmentId);
 
     if (!assessment) {
@@ -182,11 +182,11 @@ export const regenerateQuestionStreaming = async (req, res, next) => {
   try {
     const { prompt } = req.body;
     const apiKey = req.headers['x-openai-api-key'];
-    
+
     if (!apiKey) {
       return res.status(400).json({ success: false, error: 'OpenAI API key is required. Please add your API key in Settings.' });
     }
-    
+
     const { question, assessment } = await getQuestionWithContext(req.params.id);
 
     if (!question) {
@@ -210,11 +210,11 @@ export const regenerateAnswerStreaming = async (req, res, next) => {
   try {
     const { answerIndex, prompt } = req.body;
     const apiKey = req.headers['x-openai-api-key'];
-    
+
     if (!apiKey) {
       return res.status(400).json({ success: false, error: 'OpenAI API key is required. Please add your API key in Settings.' });
     }
-    
+
     const { question, assessment } = await getQuestionWithContext(req.params.id);
 
     if (!question) {
