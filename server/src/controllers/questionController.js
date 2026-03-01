@@ -151,6 +151,12 @@ const applyRegeneratedAnswer = async (question, answerIndex, newText, assessment
 export const generateQuestionsStreaming = async (req, res, next) => {
   try {
     const { assessmentId, prompt } = req.body;
+    const apiKey = req.headers['x-openai-api-key'];
+    
+    if (!apiKey) {
+      return res.status(400).json({ success: false, error: 'OpenAI API key is required. Please add your API key in Settings.' });
+    }
+    
     const assessment = await getAssessmentWithRef(assessmentId);
 
     if (!assessment) {
@@ -162,7 +168,7 @@ export const generateQuestionsStreaming = async (req, res, next) => {
     const referenceText = assessment.referenceDocuments?.length
       ? await getReferenceText(assessment.referenceDocuments, assessment.configuration, prompt)
       : '';
-    const result = await streamGenerator(res, generateQuestionsStream(assessment.configuration, referenceText, prompt));
+    const result = await streamGenerator(res, generateQuestionsStream(assessment.configuration, referenceText, prompt, apiKey));
     const questions = await saveGeneratedQuestions(assessmentId, result, assessment);
 
     sendSSE(res, 'complete', { questions, metadata: result.metadata });
@@ -175,6 +181,12 @@ export const generateQuestionsStreaming = async (req, res, next) => {
 export const regenerateQuestionStreaming = async (req, res, next) => {
   try {
     const { prompt } = req.body;
+    const apiKey = req.headers['x-openai-api-key'];
+    
+    if (!apiKey) {
+      return res.status(400).json({ success: false, error: 'OpenAI API key is required. Please add your API key in Settings.' });
+    }
+    
     const { question, assessment } = await getQuestionWithContext(req.params.id);
 
     if (!question) {
@@ -184,7 +196,7 @@ export const regenerateQuestionStreaming = async (req, res, next) => {
     setupSSE(res);
 
     const referenceText = await getReferenceText(assessment?.referenceDocuments, assessment?.configuration, question.questionText);
-    const newQuestion = await streamGenerator(res, regenerateQuestionStream(question.questionText, referenceText, question.type, prompt));
+    const newQuestion = await streamGenerator(res, regenerateQuestionStream(question.questionText, referenceText, question.type, prompt, apiKey));
     await applyRegeneratedQuestion(question, newQuestion, assessment._id);
 
     sendSSE(res, 'complete', { question });
@@ -197,6 +209,12 @@ export const regenerateQuestionStreaming = async (req, res, next) => {
 export const regenerateAnswerStreaming = async (req, res, next) => {
   try {
     const { answerIndex, prompt } = req.body;
+    const apiKey = req.headers['x-openai-api-key'];
+    
+    if (!apiKey) {
+      return res.status(400).json({ success: false, error: 'OpenAI API key is required. Please add your API key in Settings.' });
+    }
+    
     const { question, assessment } = await getQuestionWithContext(req.params.id);
 
     if (!question) {
@@ -215,7 +233,7 @@ export const regenerateAnswerStreaming = async (req, res, next) => {
     const currentOption = question.options[answerIndex];
     const result = await streamGenerator(
       res,
-      regenerateAnswerStream(question.questionText, question.options, answerIndex, currentOption.isCorrect, prompt, referenceText),
+      regenerateAnswerStream(question.questionText, question.options, answerIndex, currentOption.isCorrect, prompt, referenceText, apiKey),
     );
     await applyRegeneratedAnswer(question, answerIndex, result.text, assessment._id);
 

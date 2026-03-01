@@ -1,10 +1,20 @@
 import axios from 'axios'
+import { getStoredApiKey } from '../components/common'
 
 const api = axios.create({
   baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
+})
+
+// Add API key to all requests
+api.interceptors.request.use((config) => {
+  const apiKey = getStoredApiKey()
+  if (apiKey) {
+    config.headers['x-openai-api-key'] = apiKey
+  }
+  return config
 })
 
 // Unwrap { success, data } responses automatically
@@ -18,12 +28,18 @@ api.interceptors.response.use((response) => {
 // Helper function for SSE streaming requests
 const createStreamingRequest = (url, body, onChunk, onComplete, onError) => {
   const controller = new AbortController()
+  const apiKey = getStoredApiKey()
+
+  const headers = {
+    'Content-Type': 'application/json',
+  }
+  if (apiKey) {
+    headers['x-openai-api-key'] = apiKey
+  }
 
   fetch(`/api${url}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify(body),
     signal: controller.signal,
   })

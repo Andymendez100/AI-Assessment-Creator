@@ -1,14 +1,15 @@
 import OpenAI from 'openai';
 
-let openai = null;
-
-const getOpenAI = () => {
-  if (!openai) {
-    openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+/**
+ * Create an OpenAI client with the provided API key
+ * @param {string} apiKey - The OpenAI API key from the request
+ * @returns {OpenAI} - OpenAI client instance
+ */
+const createOpenAIClient = (apiKey) => {
+  if (!apiKey) {
+    throw new Error('OpenAI API key is required. Please add your API key in Settings.');
   }
-  return openai;
+  return new OpenAI({ apiKey });
 };
 
-export default getOpenAI;
+export default createOpenAIClient;
